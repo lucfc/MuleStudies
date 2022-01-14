@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="ea2410b0-d51b-4b98-92fe-e9ba34befe7e" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="954a8331-4ca5-4831-9d7d-e758bc3fdb3a" >
+		<email:smtps-connection host="smtp.gmail.com" user="pblapiuf@gmail.com" password="Lflccl12 " >
+			<tls:context >
+				<tls:trust-store insecure="true" />
+			</tls:context>
+		</email:smtps-connection>
+		
+	</email:smtp-config>
+	<flow name="testeemailFlow" doc:id="61e2658b-dc3e-46f7-aa4d-287abaa45bcb" >
+		<http:listener doc:name="Listener" doc:id="3c1da175-e044-425a-9f55-aed4621b6b8f" config-ref="HTTP_Listener_config" path="/"/>
+		<ee:transform doc:name="Transform Message" doc:id="3524b74a-3244-4cef-a1cf-3b19fa30d254" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<email:send doc:name="Send" doc:id="e428bc4a-b9b9-4f15-ad36-7fc51e2cec10" config-ref="Email_SMTP" fromAddress="#['pblapiuf@gmail.com']" subject="Teste email mulesoft">
+			<email:to-addresses >
+				<email:to-address value='#["lucasfcarvalho.17@gmail.com"]' />
+			</email:to-addresses>
+		</email:send>
+	</flow>
+</mule>

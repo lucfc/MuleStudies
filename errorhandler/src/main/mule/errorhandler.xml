@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="7dee456f-ab25-409f-81f1-9a9a7dc80f7d" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="errorhandlerFlow" doc:id="10bad994-bbe3-414c-801a-39b85a842337" >
+		<http:listener doc:name="Listener" doc:id="dfeb74b6-b118-4e72-b8cf-36c36e1eb0c2" config-ref="HTTP_Listener_config" path="/">
+			<http:error-response statusCode="#[attributes.statusCode]" reasonPhrase="#[attributes.reason]">
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<validation:is-not-blank-string doc:name="Is not blank string" doc:id="bebb9428-00af-452a-ae21-b57d60e258e8" message="Cadeee o nomeeeeeee" value="#[payload.nome]">
+			<error-mapping sourceType="VALIDATION:BLANK_STRING" targetType="APP:NOME_INVALIDO" />
+		</validation:is-not-blank-string>
+		<validation:is-not-blank-string doc:name="Is not blank string" doc:id="3b73c5c3-1c07-4915-b9d9-0f94252efeb1" value="#[payload.cpf]" message="cpf não existe">
+			<error-mapping sourceType="VALIDATION:BLANK_STRING" targetType="APP:CPF_INEXISTENTE" />
+		</validation:is-not-blank-string>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="601b4515-5a3a-41eb-9222-a5437c4d5bfa" type="APP:CPF_INEXISTENTE">
+				<ee:transform doc:name="Transform Message" doc:id="1ce56b44-678d-4222-a959-7cac4af4b4a7" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: error.errorType,
+	otherMessage: error.detailedDescription
+}]]></ee:set-payload>
+						<ee:set-attributes ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	statusCode : 412,
+	reason: "CPF não Existe"
+}]]></ee:set-attributes>
+					</ee:message>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="d9f6762e-0044-4f99-aacf-68fa9998508c" type="APP:NOME_INVALIDO">
+				<ee:transform doc:name="Copy_of_Transform Message" doc:id="dbd5d302-c404-4d9a-98b7-e2d7851ae76d" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: error.errorType,
+	otherMessage: error.detailedDescription
+}]]></ee:set-payload>
+						<ee:set-attributes ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	statusCode : 418,
+	reason: "Nome nao informado"
+}]]></ee:set-attributes>
+					</ee:message>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>
